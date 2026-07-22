@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<!--
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  SPDX-FileCopyrightText: 2026 Hallatec Technology Solutions LLC
+
+  EmailGuard - part of Hallatec Forge.
+  Canonical: https://emailguard.hallatec.com/
+  Source:    https://github.com/hallatec/hallatec-emailguard
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EmailGuard - Phishing Readiness Index · Hallatec Forge</title>
+<meta name="description" content="Can your domain be spoofed? EmailGuard reads your SPF, DKIM, DMARC, BIMI and MX posture and hands you the exact, safe path to DMARC enforcement." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/hallatec.css?v=3" />
+<link rel="canonical" href="https://emailguard.hallatec.com/" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "EmailGuard - Phishing Readiness Index",
+  "url": "https://emailguard.hallatec.com/",
+  "applicationCategory": "SecurityApplication",
+  "operatingSystem": "Web browser",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "AED" },
+  "description": "Check whether your domain can be spoofed. Reads SPF, DKIM, DMARC, BIMI and MX and gives the exact safe path to enforcement.",
+  "isAccessibleForFree": true,
+  "publisher": { "@type": "Organization", "name": "Hallatec Technology Solutions LLC", "url": "https://hallatec.com/" }
+}
+</script>
+<meta name="author" content="Hallatec Technology Solutions LLC" />
+<meta name="copyright" content="Copyright (C) 2026 Hallatec Technology Solutions LLC" />
+<link rel="license" href="https://www.gnu.org/licenses/agpl-3.0.html" />
+<link rel="code-repository" href="https://github.com/hallatec/hallatec-emailguard" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareSourceCode",
+  "name": "EmailGuard",
+  "codeRepository": "https://github.com/hallatec/hallatec-emailguard",
+  "programmingLanguage": ["HTML", "CSS", "JavaScript"],
+  "runtimePlatform": "Web browser",
+  "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+  "copyrightYear": "2026",
+  "copyrightHolder": { "@type": "Organization", "name": "Hallatec Technology Solutions LLC", "url": "https://hallatec.com/" },
+  "author": { "@type": "Organization", "name": "Hallatec Technology Solutions LLC", "url": "https://hallatec.com/" },
+  "targetProduct": {
+    "@type": "SoftwareApplication",
+    "name": "EmailGuard",
+    "url": "https://emailguard.hallatec.com/",
+    "applicationCategory": "SecurityApplication"
+  },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Hallatec Forge",
+    "url": "https://forge.hallatec.com/"
+  }
+}
+</script>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="../../index.html" aria-label="Hallatec Forge home"><span class="brand-logo" role="img" aria-label="Hallatec"></span><span class="brand-sub">Forge</span></a>
+    <span class="nav-spring"></span>
+    <a class="back-link" href="../../index.html">← All tools</a>
+  </div>
+</header>
+
+<!-- HERO / INPUT -->
+<section class="tool-hero">
+  <div class="wrap">
+    <div class="kbadge"><span class="pill"><span class="tag">Phase 1</span> · Class B · Live DNS-over-HTTPS</span> <span class="chip sev-info">NIST · Protect</span></div>
+    <h1>Can your domain be <span class="grad-text">spoofed?</span></h1>
+    <p class="lead">EmailGuard reads your domain's email-authentication posture - SPF, DKIM, DMARC, BIMI and MX - and returns a plain-English spoofability verdict plus the exact, safe path to close the gap. Never an audit. Always a next step.</p>
+
+    <div class="card" style="margin-top:26px;max-width:640px">
+      <label for="domain" style="font-weight:500;font-size:14px">Domain to check</label>
+      <div class="input-group" style="margin-top:8px">
+        <input class="input" id="domain" type="text" placeholder="yourcompany.com" autocomplete="off" spellcheck="false" />
+        <button class="btn btn-primary" id="scanBtn">Check posture</button>
+      </div>
+      <p class="muted" style="margin-top:10px">🔒 Runs entirely in your browser using public DNS-over-HTTPS. We read only public records - nothing is sent to Hallatec and nothing is stored. Or try a labelled sample below.</p>
+      <div class="chips" style="margin-top:12px">
+        <button class="chip-toggle" data-sample="atrisk"><span class="dot"></span> Try: a typical SME domain</button>
+        <button class="chip-toggle" data-sample="hardened"><span class="dot"></span> Try: a hardened domain</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SCAN STATE -->
+<section class="wrap hidden" id="scanState">
+  <div class="card" style="max-width:640px">
+    <h3 style="margin-bottom:6px">Checking <span id="scanDomain" class="grad-text"></span></h3>
+    <div id="scanTicks"></div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<main class="wrap hidden" id="results" style="margin-top:12px">
+
+  <!-- Verdict -->
+  <section class="card card-glow" style="display:flex;gap:28px;align-items:center;flex-wrap:wrap">
+    <div class="gauge" id="egGauge" data-value="0" data-max="100"></div>
+    <div style="flex:1;min-width:260px">
+      <p class="eyebrow">Verdict</p>
+      <h2 id="verdictHead" style="margin:8px 0 6px">-</h2>
+      <p id="verdictSummary" class="lead" style="font-size:16px">-</p>
+      <div id="verdictChips" class="btn-row" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <!-- Record cards -->
+  <section style="margin-top:26px">
+    <h3>Records we checked</h3>
+    <p class="muted" style="margin-bottom:14px">Each record, in business terms - with the copy-ready fix and the raw evidence one tap away.</p>
+    <div id="recordCards"></div>
+  </section>
+
+  <!-- DKIM fallback -->
+  <section class="card" style="margin-top:20px" id="dkimPanel">
+    <h3 style="font-size:17px">DKIM - didn't find a signature?</h3>
+    <p style="margin-top:6px">DKIM is published per <em>selector</em>, and selectors aren't discoverable from DNS alone. We probed the common ones. If yours differs, enter it - or read the <code style="background:var(--surface-3);padding:2px 6px;border-radius:5px">s=</code> tag from any <code style="background:var(--surface-3);padding:2px 6px;border-radius:5px">DKIM-Signature</code> header in a sent email.</p>
+    <div class="input-group" style="margin-top:12px;max-width:460px">
+      <input class="input" id="dkimSelector" placeholder="e.g. selector1, google, k1" spellcheck="false" />
+      <button class="btn btn-ghost" id="dkimCheck">Check selector</button>
+    </div>
+    <div class="chips" style="margin-top:10px">
+      <span class="pill">Suggested: <b class="tag">selector1</b></span>
+      <span class="pill"><b class="tag">google</b></span>
+      <span class="pill"><b class="tag">k1</b></span>
+      <span class="pill"><b class="tag">s1</b></span>
+    </div>
+    <p class="muted" id="dkimResult" style="margin-top:10px"></p>
+  </section>
+
+  <!-- DMARC roadmap -->
+  <section class="card" style="margin-top:20px">
+    <h3 style="font-size:17px">Your safe DMARC rollout</h3>
+    <p style="margin-top:6px;margin-bottom:6px">Never jump straight to <code style="background:var(--surface-3);padding:2px 6px;border-radius:5px">reject</code>. Ramp it - monitor, quarantine a rising percentage, then enforce. Here's where you are and the exact record for each stage.</p>
+    <div class="stepper" id="dmarcStepper"></div>
+    <div id="dmarcRecord" style="margin-top:10px"></div>
+  </section>
+
+  <!-- Readiness questionnaire -->
+  <section class="card" style="margin-top:20px">
+    <h3 style="font-size:17px">Phishing-readiness - 5 quick questions</h3>
+    <p class="muted" style="margin-bottom:6px">Records tell us if you <em>can</em> be spoofed. These tell us how ready your people and process are. Adjusts your readiness sub-score.</p>
+    <div id="readiness"></div>
+  </section>
+
+  <!-- Top fixes -->
+  <section style="margin-top:26px">
+    <h3>Top fixes, ranked by impact</h3>
+    <div id="topFixes" style="margin-top:12px"></div>
+  </section>
+
+  <!-- Export + CTA -->
+  <section class="cta" style="margin-top:26px">
+    <p class="eyebrow">Next step</p>
+    <h3>Want this closed properly?</h3>
+    <p>DMARC enforcement done wrong silently drops real mail. Hallatec deploys it the safe way - monitored ramp, alignment fixes, and email hardening end-to-end.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="HTC.print()">⇩ Export report</button>
+      <a class="btn btn-ghost" href="mailto:hello@hallatec.com?subject=EmailGuard%20-%20DMARC%20enforcement">Book email hardening</a>
+    </div>
+    <div class="crosslinks"><a href="../hscore/">Pair with H-Score →</a><a href="../trustkey/">Then TrustKey (identity) →</a></div>
+  </section>
+
+  <p class="disclaimer" style="margin-top:22px">Passive public-DNS lookup; point-in-time; shallow SPF include expansion (first level). Not an audit or penetration test. BIMI: a valid record does not guarantee your logo displays - that also needs DMARC enforcement and usually a paid mark certificate.</p>
+</main>
+
+<footer class="foot"><div class="wrap"><span class="brand-logo foot-logo" role="img" aria-label="Hallatec"></span><span>© 2026 Hallatec Technology Solutions LLC</span><span class="disclaimer">EmailGuard · Phishing Readiness Index</span></div></footer>
+
+<script src="assets/hallatec.js?v=3"></script>
+<script>
+const $ = HTC.$;
+/* ================= LIVE DNS-over-HTTPS ENGINE (Cloudflare JSON API, browser-side) =================
+   Passive, outside-in: reads only public DNS records. No Worker, no storage, no credentials. ---- */
+async function doh(name, type){
+  const u = 'https://cloudflare-dns.com/dns-query?name=' + encodeURIComponent(name) + '&type=' + type;
+  const r = await fetch(u, { headers: { accept: 'application/dns-json' } });
+  if(!r.ok) throw new Error('DNS resolver returned ' + r.status);
+  return r.json();
+}
+function txtVals(j){
+  return (j.Answer || []).filter(a => a.type === 16)
+    .map(a => String(a.data).replace(/\\"/g,'"').replace(/^"|"$/g,'').replace(/"\s*"/g,''));
+}
+async function buildLiveData(domain, onDone){
+  const records = {};
+  /* SPF */
+  const spf = { exists:false, qualifier:null, raw:null };
+  try { const j = await doh(domain,'TXT'); const t = txtVals(j).find(v => /^v=spf1/i.test(v));
+        if(t){ spf.exists=true; spf.raw=t; const m=t.match(/([~\-+?])all\b/); spf.qualifier=m?m[1]+'all':'none'; } } catch(e){}
+  onDone && onDone('SPF');
+  /* MX */
+  const mx = { present:false, raw:null };
+  try { const j = await doh(domain,'MX'); const a=(j.Answer||[]).filter(x=>x.type===15).map(x=>x.data);
+        if(a.length){ mx.present=true; mx.raw=a.map(s=>s.replace(/\.$/,'')).join(' · '); } } catch(e){}
+  onDone && onDone('MX');
+  /* DMARC */
+  const dmarc = { exists:false, p:null, pct:100, raw:null };
+  try { const j = await doh('_dmarc.'+domain,'TXT'); const t = txtVals(j).find(v => /^v=DMARC1/i.test(v));
+        if(t){ dmarc.exists=true; dmarc.raw=t; const p=t.match(/\bp=(\w+)/i); dmarc.p=p?p[1].toLowerCase():'none';
+               const pc=t.match(/\bpct=(\d+)/i); if(pc) dmarc.pct=+pc[1]; } } catch(e){}
+  onDone && onDone('DMARC');
+  /* DKIM - probe common selectors in parallel (TXT then delegated CNAME) */
+  const dkim = { present:false, selector:null, raw:null };
+  const SELS = ['selector1','selector2','google','k1','s1','default'];
+  const dres = await Promise.all(SELS.map(async sel => {
+    try { const j = await doh(sel+'._domainkey.'+domain,'TXT');
+          const t = txtVals(j).find(v => /v=DKIM1|k=rsa|p=[A-Za-z0-9]{20}/i.test(v));
+          if(t) return { sel, raw:t };
+          const jc = await doh(sel+'._domainkey.'+domain,'CNAME');
+          const cn = (jc.Answer||[]).filter(x=>x.type===5).map(x=>x.data);
+          if(cn.length) return { sel, raw:'CNAME '+cn[0] };
+    } catch(e){}
+    return null;
+  }));
+  const hit = dres.find(Boolean);
+  if(hit){ dkim.present=true; dkim.selector=hit.sel;
+           dkim.raw = hit.sel+'._domainkey -> '+(hit.raw.length>64?hit.raw.slice(0,64)+'...':hit.raw); }
+  onDone && onDone('DKIM');
+  /* BIMI */
+  const bimi = { present:false, raw:null };
+  try { const j = await doh('default._bimi.'+domain,'TXT'); const t = txtVals(j).find(v => /^v=BIMI1/i.test(v));
+        if(t){ bimi.present=true; bimi.raw=t; } } catch(e){}
+  onDone && onDone('BIMI');
+
+  /* score (SPF 25 / DKIM 20 / DMARC 45 / BIMI 10) */
+  let score = 0;
+  if(spf.exists) score += spf.qualifier==='-all'?25 : spf.qualifier==='~all'?15 : spf.qualifier==='?all'?8 : spf.qualifier==='+all'?2 : 10;
+  if(dkim.present) score += 20;
+  if(dmarc.exists) score += dmarc.p==='reject'?45 : dmarc.p==='quarantine'?30 : 12;
+  if(bimi.present) score += (dmarc.p==='reject')?10:4;
+  score = Math.min(100, Math.round(score));
+  const enforced = dmarc.exists && (dmarc.p==='reject' || dmarc.p==='quarantine');
+  const spoofable = !(enforced && spf.exists && spf.qualifier!=='+all');
+  const dmarcStage = !dmarc.exists?0 : dmarc.p==='reject'?2 : dmarc.p==='quarantine'?1 : 0;
+
+  records.SPF = spf.exists ? {
+    st: spf.qualifier==='-all'?'pass':'warn',
+    sent: spf.qualifier==='-all' ? 'A sender policy is published and ends in -all (hard-fail) - unlisted senders are rejected. Correct.'
+        : spf.qualifier==='~all' ? 'A sender policy exists but ends in ~all (soft-fail) - receivers are asked to accept unlisted senders anyway.'
+        : 'A sender policy exists but does not hard-fail unknown senders (' + (spf.qualifier||'no all qualifier') + ').',
+    fix: spf.qualifier==='-all'?null:spf.raw.replace(/[~+?]all\b/,'-all'), raw:spf.raw, src:'TXT @ '+domain
+  } : { st:'fail', sent:'No SPF record was found - anyone can send mail claiming to be your domain and receivers have no policy to check against.',
+    fix:'v=spf1 include:_spf.<your-provider> -all', raw:'Not found', src:'TXT @ '+domain };
+
+  records.DKIM = dkim.present ? {
+    st:'pass', sent:'A DKIM signature was found (selector '+dkim.selector+') - your mail is being cryptographically signed.',
+    fix:null, raw:dkim.raw, src:'TXT/CNAME '+dkim.selector+'._domainkey.'+domain
+  } : { st:'unknown', sent:'No DKIM signature was found for the common selectors we probed. Selectors are not fully discoverable from DNS - yours may differ. Check it below.',
+    fix:null, raw:'No signature for: '+SELS.join(', '), src:'TXT @ <selector>._domainkey.'+domain };
+
+  records.DMARC = dmarc.exists ? {
+    st: dmarc.p==='reject'?'pass':(dmarc.p==='quarantine'?'warn':'fail'),
+    sent: dmarc.p==='reject' ? 'DMARC is enforced at p=reject - spoofed mail is refused outright. Best practice.'
+        : dmarc.p==='quarantine' ? 'DMARC is at p=quarantine'+(dmarc.pct<100?' (pct='+dmarc.pct+')':'')+' - suspicious mail is filtered, but not fully rejected yet.'
+        : 'DMARC is published but set to p=none - it reports only and tells receivers to take no action, so spoofing still lands.',
+    fix: dmarc.p==='reject'?null : (dmarc.p==='quarantine' ? dmarc.raw.replace(/p=quarantine/i,'p=reject').replace(/pct=\d+/i,'pct=100')
+        : 'v=DMARC1; p=quarantine; pct=25; rua=mailto:dmarc@'+domain+'; fo=1'),
+    raw:dmarc.raw, src:'TXT @ _dmarc.'+domain
+  } : { st:'fail', sent:'No DMARC record was found - even with SPF and DKIM, receivers have no instruction to reject mail that fails them, so your domain can be spoofed.',
+    fix:'v=DMARC1; p=none; rua=mailto:dmarc@'+domain, raw:'Not found', src:'TXT @ _dmarc.'+domain };
+
+  records.BIMI = bimi.present ? {
+    st:'pass', sent:'A BIMI record is published'+(enforced?' and DMARC is enforced, so your logo can display in supporting inboxes.':' - but your logo only shows once DMARC is enforced.'),
+    fix:null, raw:bimi.raw, src:'TXT @ default._bimi.'+domain
+  } : { st:'unknown', sent:'No BIMI record - your brand logo will not show in inboxes. Cosmetic, and only relevant once DMARC is enforced anyway.',
+    fix:null, raw:'Not found', src:'TXT @ default._bimi.'+domain };
+
+  records.MX = mx.present ? {
+    st:'pass', sent:'Mail exchangers resolve correctly - mail can be delivered to you.', fix:null, raw:mx.raw, src:'MX @ '+domain
+  } : { st:'warn', sent:'No MX records resolve - this domain may not receive mail, or routes it elsewhere.', fix:null, raw:'Not found', src:'MX @ '+domain };
+
+  const summary = spoofable
+    ? 'Your domain can likely be impersonated. ' + (!dmarc.exists ? 'There is no DMARC policy telling receivers to reject spoofed mail.'
+        : dmarc.p==='none' ? 'DMARC is publish-only (p=none), so nothing is actually blocked.' : 'Enforcement is not yet complete.')
+    : 'Your domain is hard to impersonate - SPF, DKIM and enforced DMARC line up. This is the target state.';
+
+  return { score, spoofable, summary, records, dmarcStage, status:'live' };
+}
+
+/* Live scan: real lookups with honest ticks, then render. On network/CORS failure, an honest error - never a fabricated verdict. */
+async function runLive(){
+  const raw = ($("#domain").value||"").trim().toLowerCase().replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+  if(!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(raw)){ HTC.toast("Enter a valid domain, e.g. yourcompany.com"); return; }
+  currentDomain = raw;
+  $("#results").classList.add("hidden");
+  const st = $("#scanState"); st.classList.remove("hidden");
+  $("#scanDomain").textContent = raw;
+  const ticks = $("#scanTicks");
+  ticks.innerHTML = CHECKS.map(c => '<div class="scan-tick run" data-c="'+c+'"><span class="s"></span>'+REC_LABELS[c]+'</div>').join("");
+  if(st.scrollIntoView) st.scrollIntoView({behavior:"smooth",block:"center"});
+  try {
+    const data = await buildLiveData(raw, (c) => { const row = ticks.querySelector('[data-c="'+c+'"]');
+      if(row){ row.classList.remove("run"); row.classList.add("done"); row.querySelector(".s").textContent="✓"; } });
+    st.classList.add("hidden");
+    const dk = $("#dkimPanel"); if(dk) dk.classList.remove("hidden");
+    render(raw, data, true);
+  } catch(err){
+    st.classList.add("hidden");
+    showError(raw, err);
+  }
+}
+function showError(domain, err){
+  currentResult = null;
+  const g = $("#egGauge"); HTC.gauge(g, null, { label:"EmailGuard score", emptyText:"N/A", band:"No verdict" });
+  $("#verdictHead").textContent = "Could not complete the check";
+  $("#verdictSummary").textContent = "We could not reach the public DNS resolver for "+domain+" just now - usually a temporary network issue. Try again, or check the spelling.";
+  $("#verdictChips").innerHTML = '<span class="chip sev-warn"><span class="ic">!</span> Lookup failed</span><span class="pill">Domain: <b class="tag">'+HTC.esc(domain)+'</b></span>';
+  $("#recordCards").innerHTML = '<div class="alert warn"><span class="ic">!</span><span>'+HTC.esc(String((err&&err.message)||err))+'. No verdict was issued.</span></div>';
+  $("#dmarcStepper").innerHTML=""; $("#dmarcRecord").innerHTML=""; $("#readiness").innerHTML=""; $("#topFixes").innerHTML="";
+  const dk = $("#dkimPanel"); if(dk) dk.classList.add("hidden");
+  HTC.reveal($("#results"));
+}
+
+/* ---- labelled sample scenarios (demo + offline fallback) ---- */
+const SCENARIOS = {
+  atrisk: {
+    score: 46, spoofable: true,
+    summary: "Your domain can likely be impersonated - DMARC is published but set to monitor only, so nothing is actually blocked.",
+    records: {
+      SPF:  { st:"warn", sent:"A sender policy exists, but it ends in ~all (soft-fail) - receivers are asked to allow unlisted senders anyway.",
+              fix:'v=spf1 include:_spf.yourprovider.com -all', raw:'v=spf1 include:_spf.google.com ~all', src:"TXT @ yourcompany.com" },
+      DKIM: { st:"pass", sent:"A DKIM signature was found for the selector we checked - your mail is being signed.",
+              fix:null, raw:'selector1._domainkey -> v=DKIM1; k=rsa; p=MIIBI...', src:"CNAME selector1._domainkey" },
+      DMARC:{ st:"fail", sent:"DMARC is set to p=none. It reports, but tells receivers to take no action on spoofed mail - so spoofing still lands.",
+              fix:'v=DMARC1; p=quarantine; pct=25; rua=mailto:dmarc@yourcompany.com; fo=1', raw:'v=DMARC1; p=none; rua=mailto:dmarc@yourcompany.com', src:"TXT @ _dmarc.yourcompany.com" },
+      BIMI: { st:"unknown", sent:"No BIMI record - your brand logo won't show in inboxes. Cosmetic until DMARC is enforced anyway.",
+              fix:null, raw:"Not found for the selectors we checked", src:"TXT @ default._bimi.yourcompany.com" },
+      MX:   { st:"pass", sent:"Mail exchangers resolve correctly - mail can be delivered to you.",
+              fix:null, raw:'10 mx1.yourprovider.com · 20 mx2.yourprovider.com', src:"MX @ yourcompany.com" }
+    },
+    dmarcStage: 0
+  },
+  hardened: {
+    score: 92, spoofable: false,
+    summary: "Your domain is hard to impersonate - SPF hard-fails, DKIM signs, and DMARC is enforced at reject. This is the target state.",
+    records: {
+      SPF:  { st:"pass", sent:"Sender policy ends in -all (hard-fail) - unlisted senders are rejected. Correct.",
+              fix:null, raw:'v=spf1 include:_spf.yourprovider.com -all', src:"TXT @ yourcompany.com" },
+      DKIM: { st:"pass", sent:"DKIM signature present and valid for the checked selector.",
+              fix:null, raw:'selector1._domainkey -> v=DKIM1; k=rsa; p=MIIBI...', src:"CNAME selector1._domainkey" },
+      DMARC:{ st:"pass", sent:"DMARC is p=reject at 100% - spoofed mail is refused outright. Best practice.",
+              fix:null, raw:'v=DMARC1; p=reject; pct=100; rua=mailto:dmarc@yourcompany.com; fo=1', src:"TXT @ _dmarc.yourcompany.com" },
+      BIMI: { st:"pass", sent:"A valid BIMI record is published with a mark certificate - your logo can display in supporting inboxes.",
+              fix:null, raw:'v=BIMI1; l=https://.../logo.svg; a=https://.../vmc.pem', src:"TXT @ default._bimi.yourcompany.com" },
+      MX:   { st:"pass", sent:"Mail exchangers resolve correctly.",
+              fix:null, raw:'10 mx1.yourprovider.com · 20 mx2.yourprovider.com', src:"MX @ yourcompany.com" }
+    },
+    dmarcStage: 2
+  }
+};
+const DMARC_STAGES = [
+  { st:"Monitor", sd:"p=none", rec:'v=DMARC1; p=none; rua=mailto:dmarc@DOMAIN' },
+  { st:"Quarantine", sd:"ramp pct 25->100", rec:'v=DMARC1; p=quarantine; pct=25; rua=mailto:dmarc@DOMAIN; fo=1' },
+  { st:"Reject", sd:"p=reject", rec:'v=DMARC1; p=reject; pct=100; rua=mailto:dmarc@DOMAIN; fo=1' }
+];
+const CHECKS = ["SPF","DKIM","DMARC","BIMI","MX"];
+const REC_LABELS = { SPF:"SPF · sender policy", DKIM:"DKIM · signing", DMARC:"DMARC · enforcement", BIMI:"BIMI · brand indicator", MX:"MX · mail routing" };
+const SEV_ICON = { pass:"✓", warn:"!", fail:"✕", unknown:"?" };
+const SEV_WORD = { pass:"Pass", warn:"Needs attention", fail:"Fail", unknown:"Not found" };
+
+let currentDomain = "yourcompany.com";
+let currentResult = null;
+
+/* isSample=true  -> a labelled demo scenario with real illustrative data (safe to score)
+   isSample=false -> a real domain the user typed; we have no live DNS, so we must not score it */
+function runScan(scenarioKey, isSample){
+  const domain = ($("#domain").value.trim() || "yourcompany.com").toLowerCase();
+  currentDomain = domain;
+  const data = SCENARIOS[scenarioKey] || SCENARIOS.atrisk;
+  $("#scanDomain").textContent = domain;
+  $("#results").classList.add("hidden");
+  const st = $("#scanState"); st.classList.remove("hidden");
+  const ticks = $("#scanTicks");
+  if(!isSample){
+    /* Real domain, no live resolver in this prototype: do not animate fake "checked" ticks. */
+    ticks.innerHTML = '<p class="muted">This prototype does not run a live DNS lookup. Preparing an honest result...</p>';
+  } else {
+    ticks.innerHTML = CHECKS.map(c=>
+      '<div class="scan-tick" data-c="'+c+'"><span class="s"></span>'+REC_LABELS[c]+'</div>').join("");
+  }
+  if(st.scrollIntoView) st.scrollIntoView({behavior:"smooth",block:"center"});
+  if(isSample){
+    CHECKS.forEach((c,i)=>{
+      const row = ticks.querySelector('[data-c="'+c+'"]');
+      if(!row) return;
+      setTimeout(()=> row.classList.add("run"), i*260);
+      setTimeout(()=>{ row.classList.remove("run"); row.classList.add("done"); row.querySelector(".s").textContent="✓"; }, i*260+230);
+    });
+  }
+  setTimeout(()=>{
+    st.classList.add("hidden");
+    if(isSample) render(domain, data);
+    else showUnverified(domain);
+  }, CHECKS.length*260+350);
+}
+
+/* ---- Honest state for real, typed domains (security-sensitive).
+   This prototype has no live DNS resolver in the browser, so we must NOT issue a
+   spoofability verdict for a domain we did not actually check. We return an explicit
+   "unverified" result and render an honest panel instead of a fabricated score. ---- */
+function unverifiedResult(domain){
+  const r = HTC.result({
+    toolId: "emailguard",
+    status: "unverified",
+    verdict: "unverified",
+    label: "Verification unavailable",
+    summary: "EmailGuard could not verify SPF, DKIM, or DMARC records for this domain in this prototype build. No live DNS lookup was performed, so no spoofability verdict has been issued.",
+    score: null,
+    confidence: "none"
+  });
+  r.domain = domain;
+  return r;
+}
+
+function showUnverified(domain){
+  const r = unverifiedResult(domain);
+  currentResult = r;
+  $("#scanState").classList.add("hidden");
+  const res = $("#results");
+  /* Verdict card: no score, no spoofable/enforced chip. Honest, calm, brand-safe. */
+  const g = $("#egGauge");
+  g.innerHTML = '<div class="center"><div class="num" style="font-size:26px">--</div><div class="den">no verdict</div></div>';
+  g.removeAttribute("aria-label");
+  g.setAttribute("aria-label", "No score issued - verification unavailable in this prototype");
+  $("#verdictHead").textContent = r.label;
+  $("#verdictSummary").textContent = r.summary;
+  $("#verdictChips").innerHTML =
+    '<span class="chip sev-info"><span class="ic">i</span> Unverified</span>'+
+    '<span class="pill">Domain: <b class="tag">'+HTC.esc(r.domain)+'</b></span>'+
+    '<span class="pill">Live DNS check: <b class="tag">not available in prototype</b></span>';
+
+  /* Suppress the fabricated record/DMARC/fix panels; show one honest explanation. */
+  $("#recordCards").innerHTML =
+    '<div class="alert"><span class="ic">i</span><span>No live security verdict issued. This prototype requires DNS verification before classifying spoofability. '+
+    'To see how a full result looks, try one of the labelled sample domains above.</span></div>';
+  $("#dmarcStepper").innerHTML = "";
+  $("#dmarcRecord").innerHTML = "";
+  $("#readiness").innerHTML = "";
+  $("#topFixes").innerHTML = "";
+  /* Hide the DKIM probe panel too - it implies a live lookup we did not run. */
+  const dk = $("#dkimPanel"); if(dk) dk.classList.add("hidden");
+
+  HTC.reveal(res);
+}
+
+function render(domain, data, live){
+  const spoof = data.spoofable;
+  /* B06 normalised result. Live scan => status/confidence "live"; labelled sample => demo_only/sample. */
+  currentResult = HTC.result({
+    toolId: "emailguard",
+    status: live ? "live" : "demo_only",
+    verdict: spoof ? (live ? "spoofable" : "spoofable_sample") : (live ? "protected" : "protected_sample"),
+    label: (spoof ? "Likely spoofable" : "Well protected") + (live ? "" : " (sample)"),
+    summary: data.summary,
+    score: data.score,
+    severity: spoof ? "high" : "low",
+    confidence: live ? "live" : "sample"
+  });
+  currentResult.domain = domain;
+  /* Sample scenarios re-enable the DKIM panel in case a prior real check hid it. */
+  const dk = $("#dkimPanel"); if(dk) dk.classList.remove("hidden");
+  const g = $("#egGauge"); g.dataset.value = data.score;
+  HTC.gauge(g, data.score, { band: data.score>=75?"Hard to spoof":data.score>=50?"Partly protected":"Spoofable", label:"EmailGuard score" });
+  $("#verdictHead").innerHTML = spoof ? 'Yes - likely spoofable' : 'No - well protected';
+  $("#verdictSummary").textContent = data.summary;
+  $("#verdictChips").innerHTML =
+    '<span class="chip '+(spoof?'sev-fail':'sev-pass')+'"><span class="ic">'+(spoof?'✕':'✓')+'</span> '+(spoof?'Spoofable':'Enforced')+'</span>'+
+    '<span class="pill">Domain: <b class="tag">'+HTC.esc(domain)+'</b></span>'+
+    '<span class="pill">Checked: <b class="tag">'+new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})+'</b> · Asia/Dubai</span>';
+
+  $("#recordCards").innerHTML = CHECKS.map(c=>{
+    const r = data.records[c];
+    return '<div class="finding">'+
+      '<div class="finding-head"><h4>'+REC_LABELS[c]+'</h4>'+
+        '<span class="chip sev-'+r.st+'"><span class="ic">'+SEV_ICON[r.st]+'</span> '+SEV_WORD[r.st]+'</span></div>'+
+      '<p class="sentence">'+r.sent+'</p>'+
+      (r.fix ? '<div class="code" data-copy="'+r.fix.replace(/"/g,'&quot;')+'" style="margin-top:12px">'+r.fix+'</div>' : '')+
+      '<details class="drawer"><summary>Evidence</summary><div class="drawer-body">'+
+        '<div class="evidence-row"><span class="k">Raw record</span><span class="v" style="font-family:monospace">'+r.raw+'</span></div>'+
+        '<div class="evidence-row"><span class="k">Source</span><span class="v">'+r.src+'</span></div>'+
+        '<div class="evidence-row"><span class="k">As of</span><span class="v asof">just now · point-in-time</span></div>'+
+      '</div></details></div>';
+  }).join("");
+  HTC.wireCopy($("#recordCards"));
+
+  /* DMARC rollout stepper - where the sample domain sits on the monitor->quarantine->reject path */
+  $("#dmarcStepper").innerHTML = DMARC_STAGES.map((s,i)=>{
+    const cls = i<data.dmarcStage?"done":i===data.dmarcStage?"current":"";
+    return '<div class="step '+cls+'"><span class="knob"></span><div class="st">'+s.st+'</div><div class="sd">'+s.sd+'</div>'+
+      (i===data.dmarcStage?'<span class="badge-now">You are here</span>':'')+'</div>';
+  }).join("");
+
+  /* The exact next-stage record to publish (DOMAIN token swapped for the checked domain, escaped) */
+  const nextStage = DMARC_STAGES[Math.min(data.dmarcStage + (spoof?1:0), 2)];
+  $("#dmarcRecord").innerHTML = spoof
+    ? '<p class="muted" style="margin:10px 0 6px">Your next safe move - publish this, then watch reports for two weeks before ramping:</p>'+
+      '<div class="code" data-copy="'+HTC.esc(nextStage.rec.replace(/DOMAIN/g,domain))+'">'+HTC.esc(nextStage.rec.replace(/DOMAIN/g,domain))+'</div>'
+    : '<div class="alert"><span class="ic">✓</span><span>You are at full enforcement (p=reject). Keep monitoring aggregate reports so a new sending source never silently breaks.</span></div>';
+  HTC.wireCopy($("#dmarcRecord"));
+
+  /* Records tell us if the domain CAN be spoofed. Readiness reflects people + process.
+     This is a light, honest sub-signal - not a live check. */
+  const readyItems = [
+    { k:"Staff can report a suspicious email in one click",     ok:!spoof },
+    { k:"A DMARC aggregate mailbox is monitored, not ignored",  ok:data.records.DMARC.st!=="unknown" },
+    { k:"New sending tools are added to SPF before they send",  ok:data.records.SPF.st==="pass" }
+  ];
+  $("#readiness").innerHTML =
+    '<p class="muted" style="margin-bottom:10px">A quick readiness read for this sample. In a live assessment Hallatec confirms each with your team.</p>'+
+    readyItems.map(it =>
+      '<div class="evidence-row"><span class="v">'+HTC.esc(it.k)+'</span>'+
+      '<span class="chip '+(it.ok?'sev-pass':'sev-warn')+'"><span class="ic">'+(it.ok?'✓':'!')+'</span> '+(it.ok?'Looks good':'Worth checking')+'</span></div>'
+    ).join("");
+
+  /* Top fixes - ranked: fails first, then warnings, each tied to its record + copy-ready fix */
+  const order = { fail:0, warn:1, unknown:2, pass:3 };
+  const fixes = CHECKS
+    .map(c => ({ c, r:data.records[c] }))
+    .filter(x => x.r.st==="fail" || x.r.st==="warn")
+    .sort((a,b)=> order[a.r.st]-order[b.r.st]);
+  $("#topFixes").innerHTML = fixes.length
+    ? fixes.map((x,i)=>
+        '<div class="rec"><span class="rank">'+(i+1)+'</span><div class="rbody">'+
+        '<h4>'+REC_LABELS[x.c]+'</h4><p>'+HTC.esc(x.r.sent)+'</p>'+
+        (x.r.fix ? '<div class="code" data-copy="'+HTC.esc(x.r.fix)+'" style="margin-top:10px">'+HTC.esc(x.r.fix)+'</div>' : '')+
+        '</div></div>'
+      ).join("")
+    : '<div class="alert"><span class="ic">✓</span><span>No blocking gaps in this sample - the domain is in strong shape. Keep enforcement and monitoring in place.</span></div>';
+  HTC.wireCopy($("#topFixes"));
+
+  HTC.reveal($("#results"));
+}
+
+/* ---- DKIM selector helper: live lookup against the entered domain ---- */
+async function checkSelector(){
+  const sel = ($("#dkimSelector").value || "").trim().replace(/[^a-z0-9._-]/gi,'');
+  const out = $("#dkimResult");
+  const domain = (($("#domain").value||currentDomain||"").trim().toLowerCase()).replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+  if(!sel){ out.textContent = "Enter a selector to check - for example selector1, google or k1."; return; }
+  if(!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain)){ out.textContent = "Enter a domain above first, then test a selector against it."; return; }
+  out.textContent = 'Checking ' + sel + '._domainkey.' + domain + ' ...';
+  try {
+    const j = await doh(sel+'._domainkey.'+domain,'TXT');
+    const t = txtVals(j).find(v => /v=DKIM1|k=rsa|p=[A-Za-z0-9]{20}/i.test(v));
+    if(t){ out.innerHTML = '<span class="chip sev-pass"><span class="ic">✓</span> Found</span> Selector <b class="tag">'+HTC.esc(sel)+'</b> has a DKIM key published - mail signed with it validates.'; return; }
+    const jc = await doh(sel+'._domainkey.'+domain,'CNAME');
+    const cn = (jc.Answer||[]).filter(x=>x.type===5).map(x=>x.data);
+    if(cn.length){ out.innerHTML = '<span class="chip sev-pass"><span class="ic">✓</span> Found</span> Selector <b class="tag">'+HTC.esc(sel)+'</b> delegates via CNAME to '+HTC.esc(cn[0])+' - DKIM is set up.'; return; }
+    out.innerHTML = '<span class="chip sev-unknown"><span class="ic">?</span> Not found</span> No DKIM record at <b class="tag">'+HTC.esc(sel)+'._domainkey.'+HTC.esc(domain)+'</b>. Try another selector, or read the s= tag from a sent email header.';
+  } catch(e){ out.textContent = 'Could not reach the resolver just now - try again.'; }
+}
+
+/* ---- wiring ---- */
+$("#scanBtn").addEventListener("click", ()=> runLive());
+$("#domain").addEventListener("keydown", e=>{ if(e.key==="Enter") runLive(); });
+HTC.$$('[data-sample]').forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    const key = btn.getAttribute("data-sample");
+    if(!$("#domain").value.trim()) $("#domain").value = key==="hardened" ? "well-protected-co.ae" : "typical-sme.ae";
+    runScan(key, true);
+  });
+});
+const dkimBtn = $("#dkimCheck"); if(dkimBtn) dkimBtn.addEventListener("click", checkSelector);
+</script>
+</body>
+</html>
